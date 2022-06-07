@@ -1,0 +1,11 @@
+#index:
+#    path: /
+#    controller: App\Controller\DefaultController::index
+
+create-canvas:
+  path: /create-canvas
+  controller: MyProject\Apps\SpaceGame\Api\Controller\Canvases\CanvasesCreateGetController
+
+move:
+  path: /move/{canvasName}/{movementDirection}
+  controller: MyProject\Apps\SpaceGame\Api\Controller\Canvases\CanvasesMoveSpaceshipGetController

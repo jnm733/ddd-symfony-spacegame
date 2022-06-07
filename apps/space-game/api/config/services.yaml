@@ -1,0 +1,67 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+
+
+    # add more service definitions when explicit configuration is needed
+    # please note that last definitions always *replace* previous ones
+
+    # -- DATABASES --
+    Doctrine\DBAL\Connection:
+        factory: [ MyProject\Shared\Modules\Infrastructure\Persistence\Doctrine\DoctrineConnectionFactory, createConnection ]
+        arguments:
+            - 'SpaceGame'
+            - driver: '%env(SPACEGAME_DATABASE_DRIVER)%'
+              host: '%env(SPACEGAME_DATABASE_HOST)%'
+              port: '%env(SPACEGAME_DATABASE_PORT)%'
+              dbname: '%env(SPACEGAME_DATABASE_NAME)%'
+              user: '%env(SPACEGAME_DATABASE_USER)%'
+              password: '%env(SPACEGAME_DATABASE_PASSWORD)%'
+              unix_socket: /var/lib/mysql/mysql.sock
+              server_version: '5.5'
+              charset: UTF8
+
+    # -- REPOSITORIES --
+    MyProject\SpaceGame\Modules\Canvases\Domain\Repositories\CanvasRepository:
+        class: 'MyProject\SpaceGame\Modules\Canvases\Infrastructure\Persistence\Doctrine\DoctrineCanvasRepository'
+        arguments:
+            $connection: '@Doctrine\DBAL\Connection'
+            $mapper: '@MyProject\SpaceGame\Modules\Canvases\Infrastructure\Mappers\CanvasMysqlMapper'
+
+    # -- CONTROLLERS --
+    MyProject\Apps\SpaceGame\Api\Controller\Canvases\CanvasesCreateGetController:
+        arguments:
+            $useCase: '@MyProject\SpaceGame\Modules\Canvases\Application\CanvasCreator'
+        tags: ['controller.service_arguments']
+    MyProject\Apps\SpaceGame\Api\Controller\Canvases\CanvasesMoveSpaceshipGetController:
+        arguments:
+            $useCase: '@MyProject\SpaceGame\Modules\Canvases\Application\SpaceshipMover'
+        tags: ['controller.service_arguments']
+
+    # -- DATA MAPPERS --
+    MyProject\SpaceGame\Modules\Canvases\Infrastructure\Mappers\CanvasApiDtoMapper:
+    MyProject\SpaceGame\Modules\Canvases\Infrastructure\Mappers\CanvasMysqlMapper:
+
+    # -- USE CASES --
+    MyProject\SpaceGame\Modules\Canvases\Application\CanvasCreator:
+        arguments:
+            $logger: '@logger'
+            $dataMapper: '@MyProject\SpaceGame\Modules\Canvases\Infrastructure\Mappers\CanvasApiDtoMapper'
+            $repository: '@MyProject\SpaceGame\Modules\Canvases\Domain\Repositories\CanvasRepository'
+    MyProject\SpaceGame\Modules\Canvases\Application\SpaceshipMover:
+        arguments:
+            $logger: '@logger'
+            $dataMapper: '@MyProject\SpaceGame\Modules\Canvases\Infrastructure\Mappers\CanvasApiDtoMapper'
+            $repository: '@MyProject\SpaceGame\Modules\Canvases\Domain\Repositories\CanvasRepository'

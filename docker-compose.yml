@@ -1,0 +1,48 @@
+version: '3'
+
+services:
+  nginx:
+    restart: 'no'
+    build:
+      context: .
+      dockerfile: etc/docker/dev/nginx/Dockerfile
+    container_name: symfony-ddd-hexagonal-spacegame-nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/app:delegated
+    depends_on:
+      - fpm
+
+  fpm:
+    restart: 'no'
+    container_name: symfony-ddd-hexagonal-spacegame-fpm
+    build:
+      context: .
+      dockerfile: etc/docker/dev/php/Dockerfile
+    ports:
+      - "2222:22"
+      - "9090:9000"
+    volumes:
+      - .:/app:delegated
+    env_file:
+      - .env
+
+  mariadb:
+    restart: 'no'
+    container_name: symfony-ddd-hexagonal-spacegame-db
+    build:
+      context: .
+      dockerfile: etc/docker/dev/mariadb/Dockerfile
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - ./etc/docker/dev/mariadb/migrations:/docker-entrypoint-initdb.d
+      - database:/var/lib/mysql:delegated
+    env_file:
+      - .env
+
+volumes:
+  database:
